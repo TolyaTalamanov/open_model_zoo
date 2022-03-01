@@ -3,6 +3,7 @@
 //
 
 #include <utils_gapi/stream_source.hpp>
+#include <opencv2/gapi/streaming/meta.hpp>
 
 namespace custom {
 CommonCapSrc::CommonCapSrc(std::shared_ptr<ImagesCapture>& imagesCapture)
@@ -20,10 +21,14 @@ void CommonCapSrc::preparation() {
 }
 
 bool CommonCapSrc::pull(cv::gapi::wip::Data &data) {
+    using namespace std::chrono;
     if (!first_pulled) {
         GAPI_Assert(!first.empty());
         first_pulled = true;
         data = first;
+        auto now = high_resolution_clock::now();
+        auto end_ts = duration_cast<milliseconds>(now.time_since_epoch()).count();
+        data.meta[cv::gapi::streaming::meta_tag::timestamp] = end_ts;
         return true;
     }
     cv::Mat frame = cap->read();
@@ -31,6 +36,10 @@ bool CommonCapSrc::pull(cv::gapi::wip::Data &data) {
         return false;
     }
     data = frame.clone();
+    auto now = high_resolution_clock::now();
+    auto end_ts = duration_cast<milliseconds>(now.time_since_epoch()).count();
+    data.meta[cv::gapi::streaming::meta_tag::timestamp] = end_ts;
+
     return true;
 }
 

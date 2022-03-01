@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
                 graph_inputs += cv::GIn(target_bgr.value());
             }
 
-            return cv::GComputation(std::move(graph_inputs), cv::GOut(result));
+            return cv::GComputation(std::move(graph_inputs), cv::GOut(cv::gapi::streaming::timestamp(in), result));
         });
 
         /** Configure network **/
@@ -137,7 +137,8 @@ int main(int argc, char *argv[]) {
         auto kernels = cv::gapi::combine(custom::kernels(),
                                          util::getKernelPackage(FLAGS_kernel_package));
         auto pipeline = comp.compileStreaming(cv::compile_args(kernels,
-                                                               cv::gapi::networks(net)));
+                                                               cv::gapi::networks(net),
+                                                               cv::gapi::streaming::queue_capacity{1}));
 
         /** Output container for result **/
         cv::Mat output;
@@ -166,10 +167,26 @@ int main(int argc, char *argv[]) {
 
         bool isStart = true;
         const auto startTime = std::chrono::steady_clock::now();
-        pipeline.start();
 
-        while(pipeline.pull(cv::gout(output))) {
-            presenter.drawGraphs(output);
+        int num_frames = 0;
+        using namespace std::chrono;
+        int64_t start_ts = -1;
+
+        std::vector<int64_t> latencies;
+
+        pipeline.start();
+        auto start = high_resolution_clock::now();
+        while(pipeline.pull(cv::gout(start_ts, output))) {
+            if (num_frames >= FLAGS_limit) {
+                break;
+            }
+
+            auto now = high_resolution_clock::now();
+            auto end_ts = duration_cast<milliseconds>(now.time_since_epoch()).count();
+
+            latencies.push_back(end_ts - start_ts);
+
+            //presenter.drawGraphs(output);
             if (isStart) {
                 metrics.update(startTime, output, { 10, 22 }, cv::FONT_HERSHEY_COMPLEX,
                     0.65, { 200, 10, 10 }, 2, PerformanceMetrics::MetricTypes::FPS);
@@ -180,22 +197,36 @@ int main(int argc, char *argv[]) {
                     0.65, { 200, 10, 10 }, 2, PerformanceMetrics::MetricTypes::FPS);
             }
 
-            videoWriter.write(output);
+            //videoWriter.write(output);
 
-            if (!FLAGS_no_show) {
-                cv::imshow(windowName, output);
-                int key = cv::waitKey(delay);
-                /** Press 'Esc' to quit **/
-                if (key == 27) {
-                    break;
-                } else {
-                    presenter.handleKey(key);
-                }
-            }
+            //if (!FLAGS_no_show) {
+                //cv::imshow(windowName, output);
+                //int key = cv::waitKey(delay);
+                //[>* Press 'Esc' to quit *<]
+                //if (key == 27) {
+                    //break;
+                //} else {
+                    //presenter.handleKey(key);
+                //}
+            //}
+            ++num_frames;
         }
+        auto end = high_resolution_clock::now();
+        auto elapsed = duration_cast<duration<double, std::milli>>(end - start).count();
+
         slog::info << "Metrics report:" << slog::endl;
         slog::info << "\tFPS: " << std::fixed << std::setprecision(1) << metrics.getTotal().fps << slog::endl;
         slog::info << presenter.reportMeans() << slog::endl;
+
+        auto fps = (latencies.size() / static_cast<double>(elapsed)) * 1000;
+        auto avg_latency = std::accumulate(latencies.begin(), latencies.end(), 0.0) / static_cast<double>(latencies.size());
+
+        slog::info << "FPS (G-API): " << std::fixed << std::setprecision(4) << fps << slog::endl;
+        slog::info << "Latency (G-API): " << std::fixed << std::setprecision(4) << avg_latency << slog::endl;
+        slog::info << "Elapsed (G-API): " << std::fixed << std::setprecision(4) << elapsed << slog::endl;
+        slog::info << "Processed (G-API): " << std::fixed << std::setprecision(4) << latencies.size() << slog::endl;
+
+
     }
     catch (const std::exception& error) {
         slog::err << error.what() << slog::endl;
