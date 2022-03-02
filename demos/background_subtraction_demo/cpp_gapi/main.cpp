@@ -52,8 +52,10 @@ static cv::gapi::GKernelPackage getKernelPackage(const std::string& type) {
         return cv::gapi::combine(cv::gapi::core::cpu::kernels(),
                                  cv::gapi::imgproc::cpu::kernels());
     } else if (type == "fluid") {
-        return cv::gapi::combine(cv::gapi::core::fluid::kernels(),
+        auto pkg =  cv::gapi::combine(cv::gapi::core::fluid::kernels(),
                                  cv::gapi::imgproc::fluid::kernels());
+        pkg.remove<cv::gapi::imgproc::GResize>();
+        return pkg;
     } else {
         throw std::logic_error("Unsupported kernel package type: " + type);
     }
@@ -168,7 +170,13 @@ int main(int argc, char *argv[]) {
         const auto startTime = std::chrono::steady_clock::now();
         pipeline.start();
 
+        int num_frames = 0;
         while(pipeline.pull(cv::gout(output))) {
+            if (num_frames >= FLAGS_limit) {
+                break;
+            }
+            ++num_frames;
+
             presenter.drawGraphs(output);
             if (isStart) {
                 metrics.update(startTime, output, { 10, 22 }, cv::FONT_HERSHEY_COMPLEX,
