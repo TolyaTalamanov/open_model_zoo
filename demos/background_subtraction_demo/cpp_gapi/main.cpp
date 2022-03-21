@@ -54,6 +54,10 @@ static cv::gapi::GKernelPackage getKernelPackage(const std::string& type) {
     } else if (type == "fluid") {
         auto pkg =  cv::gapi::combine(cv::gapi::core::fluid::kernels(),
                                  cv::gapi::imgproc::fluid::kernels());
+        return pkg;
+    } else if (type == "fluid-without-resize") {
+        auto pkg =  cv::gapi::combine(cv::gapi::core::fluid::kernels(),
+                                 cv::gapi::imgproc::fluid::kernels());
         pkg.remove<cv::gapi::imgproc::GResize>();
         return pkg;
     } else {
