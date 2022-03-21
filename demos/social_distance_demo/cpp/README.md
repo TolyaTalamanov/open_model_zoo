@@ -65,10 +65,8 @@ omz_converter --list models.lst
 
 ## Running
 
-Running the application with the <code>-h</code> option yields the following usage message:
+Running the application with the `-h` option yields the following usage message:
 ```
-[ INFO ] InferenceEngine: <version>
-
 social_distance_demo [OPTION]
 Options:
 
@@ -76,9 +74,6 @@ Options:
     -i "<path1>" "<path2>"     Required for video or image files input. Path to video or image files.
     -m_det "<path>"            Required. Path to the Person Detection model .xml file.
     -m_reid "<path>"           Optional. Path to the Person Re-Identification model .xml file.
-      -l "<absolute_path>"     Required for CPU custom layers. Absolute path to a shared library with the kernels implementation.
-          Or
-      -c "<absolute_path>"     Required for GPU custom kernels. Absolute path to an .xml file with the kernels description.
     -d_det "<device>"          Optional. Specify the target device for Person Detection (the list of available devices is shown below). Default value is CPU. Use "-d HETERO:<comma-separated_devices_list>" format to specify HETERO plugin. The application looks for a suitable plugin for the specified device.
     -d_reid "<device>"         Optional. Specify the target device for Person Re-Identification (the list of available devices is shown below). Default value is CPU. Use "-d_reid HETERO:<comma-separated_devices_list>" format to specify HETERO plugin. The application looks for a suitable plugin for the specified device.
     -r                         Optional. Output inference results as raw values.
@@ -123,7 +118,7 @@ For example, to run the sample on one Intel® Vision Accelerator Design with Int
 ./social_distance_demo -i <path_to_video>/inputVideo.mp4 -m_det <path_to_model>/person-detection-retail-0013.xml -m_reid <path_to_model>/person-reidentification-retail-0277.xml  -d_det HDDL -d_reid HDDL -n_iqs 10 -n_wt 4 -nireq 10
 ```
 
-> **NOTE**: For the `-tag` option (HDDL plugin only), you must specify the number of VPUs for each network in the `hddl_service.config` file located in the `<INSTALL_DIR>/deployment_tools/inference_engine/external/hddl/config/` directory using the following tags:
+> **NOTE**: For the `-tag` option (HDDL plugin only), you must specify the number of VPUs for each network in the `hddl_service.config` file located in the `<INSTALL_DIR>/runtime/3rdparty/hddl/config/` directory using the following tags:
 > * `tagDetect` for the Person Detection network
 > * `tagReId` for the Person Re-Identification network
 >

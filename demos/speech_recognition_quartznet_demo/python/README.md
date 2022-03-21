@@ -45,7 +45,7 @@ optional arguments:
   -d DEVICE, --device DEVICE
                         Optional. Specify the target device to infer on, for
                         example: CPU, GPU, HDDL, MYRIAD or HETERO. The
-                        demo will look for a suitable IE plugin for this
+                        demo will look for a suitable OpenVINO Runtime plugin for this
                         device. Default value is CPU.
 ```
 
@@ -57,7 +57,7 @@ python3 speech_recognition_quartznet_demo.py -m quartznet-15x5-en.xml -i audio.w
 
 > **NOTE**: Only 16-bit, 16 kHz, mono-channel WAVE audio files are supported.
 
-An example audio file can be taken from `<openvino_dir>/deployment_tools/demo/how_are_you_doing.wav`.
+An example audio file can be taken from OpenVINO [test data](https://storage.openvinotoolkit.org/data/test_data/) folder.
 
 ## Demo Output
 

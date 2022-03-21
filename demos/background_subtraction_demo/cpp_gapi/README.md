@@ -59,9 +59,8 @@ omz_converter --list models.lst
 Run the application with the `-h` option to see the following usage message:
 
 ```
-[ INFO ] OpenVINO Inference Engine
-[ INFO ]        version: <version>
-[ INFO ]        build: <number>
+[ INFO ] OpenVINO Runtime version ......... <version>
+[ INFO ] Build ........... <build>
 
 background_subtraction_demo_gapi [OPTION]
 Options:
@@ -115,5 +114,5 @@ The demo reports
 ## See Also
 
 * [Open Model Zoo Demos](../../README.md)
-* [Model Optimizer](https://docs.openvinotoolkit.org/latest/_docs_MO_DG_Deep_Learning_Model_Optimizer_DevGuide.html)
+* [Model Optimizer](https://docs.openvino.ai/latest/_docs_MO_DG_Deep_Learning_Model_Optimizer_DevGuide.html)
 * [Model Downloader](../../../tools/model_tools/README.md)

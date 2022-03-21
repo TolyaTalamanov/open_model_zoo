@@ -4,9 +4,15 @@ This README describes the Question Answering demo application that uses a Squad-
 
 ## How It Works
 
-On startup the demo application reads command line parameters and loads a network to Inference engine.
+On startup the demo application reads command line parameters and loads a model to OpenVINO™ Runtime plugin.
 It also fetches data from the user-provided url to populate the "context" text.
 The text is then used to search answers for user-provided questions.
+
+## Model API
+
+The demo utilizes model wrappers, adapters and pipelines from [Python* Model API](../../common/python/openvino/model_zoo/model_api/README.md).
+
+The generalized interface of wrappers with its unified results representation provides the support of multiple different question answering model topologies in one demo.
 
 ## Preparing to Run
 
