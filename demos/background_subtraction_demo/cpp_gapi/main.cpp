@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
 
         cv::GComputation comp([&]{
             cv::GMat in;
+            cv::GScalar sc;
             // NB: target_bgr is optional second input which implies a background
             // that will change user video background. If user don't specify
             // it and specifies --bgr_blur then second input won't be used since
@@ -118,9 +119,9 @@ int main(int argc, char *argv[]) {
                 ? cv::gapi::blur(bgr_resized, cv::Size(FLAGS_blur_bgr, FLAGS_blur_bgr))
                 : bgr_resized;
 
-            auto result = model->replace(in, frame_size, background);
+            auto result = model->replace(in, sc, frame_size, background);
 
-            auto graph_inputs = cv::GIn(in);
+            auto graph_inputs = cv::GIn(in, sc);
             if (target_bgr.has_value()) {
                 graph_inputs += cv::GIn(target_bgr.value());
             }
@@ -151,7 +152,9 @@ int main(int argc, char *argv[]) {
         /** ---------------- The execution part ---------------- **/
         cap = openImagesCapture(FLAGS_i, FLAGS_loop, read_type::safe, 0,
             std::numeric_limits<size_t>::max(), stringToSize(FLAGS_res));
-        auto pipeline_inputs = cv::gin(cv::gapi::wip::make_src<custom::CommonCapSrc>(cap));
+
+        cv::Scalar one(1.f, 1.f, 1.f);
+        auto pipeline_inputs = cv::gin(cv::gapi::wip::make_src<custom::CommonCapSrc>(cap), one);
         if (!is_blur && FLAGS_target_bgr.empty()) {
             cv::Scalar default_color(155, 255, 120);
             pipeline_inputs += cv::gin(cv::Mat(frame_size, CV_8UC3, default_color));

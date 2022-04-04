@@ -157,6 +157,7 @@ custom::MaskRCNNBGReplacer::MaskRCNNBGReplacer(const std::string& model_path)
 }
 
 cv::GMat custom::MaskRCNNBGReplacer::replace(cv::GMat in,
+                                             cv::GScalar /*sc*/,
                                              const cv::Size& in_size,
                                              cv::GMat background) {
     cv::GInferInputs inputs;
@@ -191,6 +192,7 @@ custom::BGMattingReplacer::BGMattingReplacer(const std::string& model_path)
 }
 
 cv::GMat custom::BGMattingReplacer::replace(cv::GMat in,
+                                            cv::GScalar sc,
                                             const cv::Size& in_size,
                                             cv::GMat background) {
     cv::GInferInputs inputs;
@@ -203,8 +205,8 @@ cv::GMat custom::BGMattingReplacer::replace(cv::GMat in,
     auto in_fp    = cv::gapi::convertTo(in, CV_32F);
     auto bgr_fp   = cv::gapi::convertTo(background, CV_32F);
 
-    cv::GScalar one(cv::Scalar::all(1.));
-    auto out = cv::gapi::mul(alpha3ch, in_fp) + cv::gapi::mul((one - alpha3ch), bgr_fp);
+    //cv::GScalar one(cv::Scalar::all(1.));
+    auto out = cv::gapi::mul(alpha3ch, in_fp) + cv::gapi::mul((sc - alpha3ch), bgr_fp);
     return cv::gapi::convertTo(out, CV_8U);
 }
 
