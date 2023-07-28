@@ -20,6 +20,7 @@
 #include <opencv2/gapi/gproto.hpp>
 #include <opencv2/gapi/infer.hpp>
 #include <opencv2/gapi/infer/ie.hpp>
+#include <opencv2/gapi/infer/onnx.hpp>
 #include <opencv2/gapi/util/optional.hpp>
 
 
@@ -132,20 +133,39 @@ int main(int argc, char* argv[]) {
                                     cv::GOut(cv::gapi::copy(in), index_score, out_ts));
         });
 
-        /** Configure network **/
-        auto config = ConfigFactory::getUserConfig(FLAGS_d, FLAGS_nireq, FLAGS_nstreams, FLAGS_nthreads);
-        // clang-format off
-        const auto net =
-            cv::gapi::ie::Params<nets::Classification>{
-                FLAGS_m,  // path to topology IR
-                fileNameNoExt(FLAGS_m) + ".bin",  // path to weights
-                FLAGS_d  // device specifier
-            }.cfgNumRequests(config.maxAsyncRequests)
-             .pluginConfig(config.getLegacyConfig());
-        // clang-format on
+        auto nets = cv::gapi::networks();
+
+        const std::string ep = FLAGS_ep;
+        if (ep.empty()) {
+            /** Configure network **/
+            auto config = ConfigFactory::getUserConfig(FLAGS_d, FLAGS_nireq, FLAGS_nstreams, FLAGS_nthreads);
+            // clang-format off
+            const auto net =
+                cv::gapi::ie::Params<nets::Classification>{
+                    FLAGS_m,  // path to topology IR
+                    fileNameNoExt(FLAGS_m) + ".bin",  // path to weights
+                    FLAGS_d  // device specifier
+                }.cfgNumRequests(config.maxAsyncRequests)
+                .pluginConfig(config.getLegacyConfig());
+            // clang-format on
+            nets += cv::gapi::networks(net);
+        } else if (ep == "DML") {
+            const auto net = cv::gapi::onnx::Params<nets::Classification> {
+                FLAGS_m
+            }.cfgAddExecutionProvider(cv::gapi::onnx::ep::DirectML(FLAGS_d))
+             .cfgDisableMemPattern();
+             nets += cv::gapi::networks(net);
+        } else if (ep == "OVEP") {
+            const auto net = cv::gapi::onnx::Params<nets::Classification> {
+                FLAGS_m
+            }.cfgAddExecutionProvider(cv::gapi::onnx::ep::OpenVINO(FLAGS_d));
+             nets += cv::gapi::networks(net);
+        } else {
+            throw std::logic_error("Invalid Execution Provider name!");
+        }
 
         auto pipeline = comp.compileStreaming(cv::compile_args(custom::kernels(),
-                                              cv::gapi::networks(net),
+                                              nets,
                                               cv::gapi::streaming::queue_capacity{1}));
 
         /** Output container for result **/
